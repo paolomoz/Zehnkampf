@@ -6,9 +6,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.logging.Logger;
-
 import org.paolomoz.zehnkampf.utils.GenHTTPResponse;
 
+/**
+ * An implementation of Runnable designed to run Sockets
+ * @author paolomoz
+ *
+ */
 class RequestRunnable implements Runnable {
 
 	Logger logger = Logger.getLogger("HttpServer");

@@ -7,6 +7,7 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -20,11 +21,16 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpVersion;
-import org.apache.http.StatusLine;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.tika.mime.MimeTypes;
 
+/**
+ * This class processes the Socket Input/OutputStream 
+ * providing the correct response from the server
+ * @author paolomoz
+ *
+ */
 public class GenHTTPResponse {
 
 	Logger logger = Logger.getLogger("HttpServer");
@@ -34,42 +40,51 @@ public class GenHTTPResponse {
 
 	public void generateResponse(InputStream in, OutputStream out, File docRoot)
 			throws IOException {
-
 		parseRequestLine(in);
-
 		File requestedFile = new File(docRoot, uri);
-
 		BufferedOutputStream buffOut = new BufferedOutputStream(out);
+		HttpResponse response = setResponse(requestedFile);
+		writeResponse(response, buffOut);
+		buffOut.flush();
+	}
 
+
+	private HttpResponse setResponse(File requestedFile)
+			throws FileNotFoundException {
 		HttpResponse response;
 		if (requestedFile.exists() && !requestedFile.isDirectory()) {
-			int fileLen = (int) requestedFile.length();
-			BufferedInputStream fileIn = new BufferedInputStream(
-					new FileInputStream(requestedFile));
-			MimeTypes mimeTypes = new MimeTypes();
-			String mimeType = mimeTypes.getMimeType(requestedFile).getName();
-
-			response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
-					HttpStatus.SC_OK, "OK");
-			response.setHeader("Content-Type", mimeType);
-			response.setHeader("Content-length", new Integer(fileLen)
-					.toString());
-			HttpEntity entity = new InputStreamEntity(fileIn, fileLen);
-			response.setEntity(entity);
+			response = setOK(requestedFile);
 		} else {
-			response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
-					HttpStatus.SC_NOT_FOUND, "Not Found");
+			response = setNotFound();
 		}
+		return response;
+	}
 
-		StatusLine statusLine = response.getStatusLine();
-		logger.info("Response - " + statusLine.getProtocolVersion().getProtocol() + 
-				"/" + statusLine.getProtocolVersion().getMajor() + 
-				"." + statusLine.getProtocolVersion().getMinor() +
-				" " + statusLine.getStatusCode() + 
-				" " + statusLine.getReasonPhrase());
-		writeResponse(response, buffOut);
 
-		buffOut.flush();
+	private HttpResponse setNotFound() {
+		HttpResponse response;
+		response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
+				HttpStatus.SC_NOT_FOUND, "Not Found");
+		return response;
+	}
+
+
+	private HttpResponse setOK(File requestedFile) throws FileNotFoundException {
+		HttpResponse response;
+		int fileLen = (int) requestedFile.length();
+		BufferedInputStream fileIn = new BufferedInputStream(
+				new FileInputStream(requestedFile));
+		MimeTypes mimeTypes = new MimeTypes();
+		String mimeType = mimeTypes.getMimeType(requestedFile).getName();
+
+		response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
+				HttpStatus.SC_OK, "OK");
+		response.setHeader("Content-Type", mimeType);
+		response.setHeader("Content-length", new Integer(fileLen)
+				.toString());
+		HttpEntity entity = new InputStreamEntity(fileIn, fileLen);
+		response.setEntity(entity);
+		return response;
 	}
 
 

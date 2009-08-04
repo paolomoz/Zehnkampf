@@ -11,7 +11,11 @@ import java.util.logging.Logger;
 
 import org.paolomoz.zehnkampf.utils.ServerArguments;
 
-
+/**
+ * The HttpServer main class
+ * @author paolomoz
+ *
+ */
 public class HttpServer {
 	
 	static Logger logger = Logger.getLogger("HttpServer");

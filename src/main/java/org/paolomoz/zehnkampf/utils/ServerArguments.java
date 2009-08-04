@@ -2,6 +2,13 @@ package org.paolomoz.zehnkampf.utils;
 
 import java.util.logging.Logger;
 
+/**
+ * This class provides some helper methods to validate, 
+ * retrieve and manage default values for arguments 
+ * provided in the main class
+ * @author paolomoz
+ *
+ */
 public class ServerArguments {
 
 	static Logger logger = Logger.getLogger("HttpServer");
