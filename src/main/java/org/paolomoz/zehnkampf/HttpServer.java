@@ -45,6 +45,7 @@ public class HttpServer {
 
 		ServerSocket sock = new ServerSocket(port);
 		logger.info("Server ready on port " + port);
+		logger.info("DocumentRoot is set: " + docRootPath);
 		while (true) {
 			Socket s = sock.accept();
 			logger.info("A connection has been accepted by the Server Socket");

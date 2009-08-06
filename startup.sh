@@ -7,9 +7,9 @@
 #
 # Request the user to enter argument values
 #
-echo "Enter the server port number (leave blank to keep 8000):"
+echo "Enter the server port number (e.g. insert 8000):"
 read port
-echo "Enter the number of threads that the pool will contain (leave blank to keep 10):"
+echo "Enter the number of threads that the pool will contain (e.g. insert 10):"
 read tpSize
 echo "Enter the docRoot path (leave blank to use default docRoot):"
 read docRootPath
