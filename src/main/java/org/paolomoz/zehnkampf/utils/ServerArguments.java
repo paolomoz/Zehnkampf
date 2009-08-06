@@ -17,6 +17,7 @@ package org.paolomoz.zehnkampf.utils;
 
 import java.util.logging.Logger;
 
+
 /**
  * This class provides some helper methods to validate, 
  * retrieve and manage default values for arguments 
@@ -26,19 +27,25 @@ import java.util.logging.Logger;
  */
 public class ServerArguments {
 
+	private static final String USAGE_MESSAGE = "Usage: java -jar Zehnkampf.jar <port> <threadPoolSize>\n" +
+					"<port> - port to listen on for HTTP requests\n" +
+					"<threadPoolSize> - size of threadPool to create";
 	static Logger logger = Logger.getLogger("HttpServer");
 	String[] args = new String[3];
+	int portDefault = 8000;
+	int tpSizeDefault = 10;
+	String docRootPathDefault = "/var/www/";
 	
 	public ServerArguments(String args[]) {
 		this.args = args;
 	}
 	
-	public int getPort() {
-		return getValidArgumentNumber(0, 8000);
+	public int getPort() throws Exception {
+		return getValidArgumentNumber(0, portDefault);
 	}
 	
-	public int getTpSize() {
-		return getValidArgumentNumber(1, 10);
+	public int getTpSize() throws Exception {
+		return getValidArgumentNumber(1, tpSizeDefault);
 	}
 	
 	public String getDocRootPath() {
@@ -46,29 +53,30 @@ public class ServerArguments {
 			return args[2];
 		}
 		else {
-			return "/var/www/";
+			return docRootPathDefault;
 		}
 	}
 	
-	private int getValidArgumentNumber(int index, int defaultValue) {
+	private int getValidArgumentNumber(int index, int defaultValue) throws Exception {
 		int value = defaultValue;
 		if ( args.length == 3 ) {
-			value = defaultValue;
-			try {
-				value = new Integer(args[index]).intValue();
-			} catch (NumberFormatException e) {
-				usageAndExit("Could not parse one of the arguments.");
-			}
+			value = setNumericValue(index, value);
+		}
+		return value;
+	}
+
+	private int setNumericValue(int index, int value) throws Exception {
+		try {
+			value = new Integer(args[index]).intValue();
+		} catch (NumberFormatException e) {
+			usageAndExit("Could not parse one of the arguments.");
 		}
 		return value;
 	}
 	
-	private static void usageAndExit(String msg) {
-		String usageMessage = "Usage: java -jar Zehnkampf.jar <port> <threadPoolSize>\n" +
-				"<port> - port to listen on for HTTP requests\n" +
-				"<threadPoolSize> - size of threadPool to create";
-		logger.severe(msg + "\n" + usageMessage);
-		System.exit(0);
+	private static void usageAndExit(String msg) throws Exception {
+		logger.severe(msg + "\n" + USAGE_MESSAGE);
+		throw new Exception();
 	}
 
 }

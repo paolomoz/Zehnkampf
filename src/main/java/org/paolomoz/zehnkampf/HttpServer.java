@@ -35,7 +35,7 @@ public class HttpServer {
 	
 	static Logger logger = Logger.getLogger("HttpServer");
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		ServerArguments argsHelper = new ServerArguments(args);
 		int port = argsHelper.getPort();
 		int tpSize = argsHelper.getTpSize();

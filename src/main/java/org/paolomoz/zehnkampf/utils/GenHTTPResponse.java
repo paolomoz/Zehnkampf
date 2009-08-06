@@ -19,7 +19,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -32,6 +31,8 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
+import org.apache.http.Header;
+import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -50,13 +51,15 @@ public class GenHTTPResponse {
 
 	Logger logger = Logger.getLogger("HttpServer");
 	String requestLine;
-	String method;
-	String uri;
+	String[] requestLineParams = new String[3];
+	int METHOD_REQUEST_PARAM = 0;
+	int URI_REQUEST_PARAM = 1;
+	int PROTOCOL_REQUEST_PARAM = 2;
 
 	public void generateResponse(InputStream in, OutputStream out, File docRoot)
 			throws IOException {
-		parseRequestLine(in);
-		File requestedFile = new File(docRoot, uri);
+		requestLineParams = getRequestLineParams(in);
+		File requestedFile = new File(docRoot, requestLineParams[URI_REQUEST_PARAM]);
 		BufferedOutputStream buffOut = new BufferedOutputStream(out);
 		HttpResponse response = setResponse(requestedFile);
 		writeResponse(response, buffOut);
@@ -80,6 +83,7 @@ public class GenHTTPResponse {
 		HttpResponse response;
 		response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
 				HttpStatus.SC_NOT_FOUND, "Not Found");
+		logger.info(response.getStatusLine().getStatusCode() + " - " + response.getStatusLine().getReasonPhrase());
 		return response;
 	}
 
@@ -99,32 +103,64 @@ public class GenHTTPResponse {
 				.toString());
 		HttpEntity entity = new InputStreamEntity(fileIn, fileLen);
 		response.setEntity(entity);
+		logger.info(response.getStatusLine().getStatusCode() + " - " + response.getStatusLine().getReasonPhrase());
 		return response;
 	}
-
-
-	private void parseRequestLine(InputStream in) throws IOException {
+	
+	public String[] getRequestLineParams(InputStream in) throws IOException {
+		String[] params = new String[3];
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		requestLine = reader.readLine();
+		logger.info("Request: " + requestLine);
 		if ((requestLine == null) || (requestLine.length() < 1)) {
 			throw new IOException("Could not read request");
 		}
 		StringTokenizer st = new StringTokenizer(requestLine);
 		try {
-			method = st.nextToken();
-			uri = st.nextToken();
+			params[METHOD_REQUEST_PARAM] = st.nextToken();
+			params[URI_REQUEST_PARAM] = st.nextToken();
+			params[PROTOCOL_REQUEST_PARAM] = st.nextToken();
 		} catch (NoSuchElementException x) {
 			throw new IOException("Could not parse the request line");
 		}
+		return params;
 	}
+
+
+//	public void parseRequestLine(InputStream in) throws IOException {
+//		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+//		requestLine = reader.readLine();
+//		logger.info("Request: " + requestLine);
+//		if ((requestLine == null) || (requestLine.length() < 1)) {
+//			throw new IOException("Could not read request");
+//		}
+//		StringTokenizer st = new StringTokenizer(requestLine);
+//		try {
+//			method = st.nextToken();
+//			uri = st.nextToken();
+//		} catch (NoSuchElementException x) {
+//			throw new IOException("Could not parse the request line");
+//		}
+//	}
 	
 
-	private void writeResponse(HttpResponse response, OutputStream buffOut)
+	public void writeResponse(HttpResponse response, OutputStream buffOut)
 			throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(baos));
-		writer.write(response.getStatusLine() + "\r\n");
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(buffOut));
+		
+		// write response status line
+		writer.write(response.getStatusLine().toString() + "\r\n");
+		
+		// write response headers
+		for (HeaderIterator iterator = response.headerIterator() ; iterator.hasNext() ;) {
+			Header item = iterator.nextHeader();
+			writer.write(item.getName() + ": " + item.getValue());
+		}
+		
+		// write response separator line
 		writer.write("\r\n");
+		
+		// write response entity
 		HttpEntity entity = response.getEntity();
 		if (entity != null) {
 			entity.writeTo(buffOut);
