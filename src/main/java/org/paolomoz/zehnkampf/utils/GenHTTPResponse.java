@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
@@ -38,6 +39,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpVersion;
 import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.tika.mime.MimeTypes;
 
@@ -51,10 +53,15 @@ public class GenHTTPResponse {
 
 	Logger logger = Logger.getLogger("HttpServer");
 	String requestLine;
+	String docRootPath;
 	String[] requestLineParams = new String[3];
 	int METHOD_REQUEST_PARAM = 0;
 	int URI_REQUEST_PARAM = 1;
 	int PROTOCOL_REQUEST_PARAM = 2;
+	
+	public GenHTTPResponse(String DocRootPath) {
+		this.docRootPath = DocRootPath;
+	}
 
 	public void generateResponse(InputStream in, OutputStream out, File docRoot)
 			throws IOException {
@@ -68,9 +75,9 @@ public class GenHTTPResponse {
 
 
 	private HttpResponse setResponse(File requestedFile)
-			throws FileNotFoundException {
+			throws FileNotFoundException, UnsupportedEncodingException {
 		HttpResponse response;
-		if (requestedFile.exists() && !requestedFile.isDirectory()) {
+		if (requestedFile.exists()) {
 			response = setOK(requestedFile);
 		} else {
 			response = setNotFound();
@@ -88,22 +95,35 @@ public class GenHTTPResponse {
 	}
 
 
-	private HttpResponse setOK(File requestedFile) throws FileNotFoundException {
+	private HttpResponse setOK(File requestedFile) throws FileNotFoundException, UnsupportedEncodingException {
 		HttpResponse response;
-		int fileLen = (int) requestedFile.length();
-		BufferedInputStream fileIn = new BufferedInputStream(
-				new FileInputStream(requestedFile));
-		MimeTypes mimeTypes = new MimeTypes();
-		String mimeType = mimeTypes.getMimeType(requestedFile).getName();
-
 		response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
 				HttpStatus.SC_OK, "OK");
-		response.setHeader("Content-Type", mimeType);
-		response.setHeader("Content-length", new Integer(fileLen)
-				.toString());
-		HttpEntity entity = new InputStreamEntity(fileIn, fileLen);
+		HttpEntity entity;
+		if (requestedFile.isDirectory()) {
+			StringBuffer sb = new StringBuffer();
+			sb.append("<html><head></head><body><ul>");
+			for (int i = 0 ; i < requestedFile.listFiles().length; i++) {
+				File item = requestedFile.listFiles()[i];
+				sb.append("<li><a href=\"" + item.getPath().substring(docRootPath.length()+1) + "\">" + item.getName() + "</a></li>");
+			}
+			sb.append("</ul></body></html>");
+			entity = new StringEntity(sb.toString());
+		} else {
+			int fileLen = (int) requestedFile.length();
+			BufferedInputStream fileIn = new BufferedInputStream(
+					new FileInputStream(requestedFile));
+			MimeTypes mimeTypes = new MimeTypes();
+			String mimeType = mimeTypes.getMimeType(requestedFile).getName();
+
+			response.setHeader("Content-Type", mimeType);
+			response.setHeader("Content-length", new Integer(fileLen)
+					.toString());
+			entity = new InputStreamEntity(fileIn, fileLen);
+		}
 		response.setEntity(entity);
-		logger.info(response.getStatusLine().getStatusCode() + " - " + response.getStatusLine().getReasonPhrase());
+		logger.info(response.getStatusLine().getStatusCode() + " - "
+				+ response.getStatusLine().getReasonPhrase());
 		return response;
 	}
 	

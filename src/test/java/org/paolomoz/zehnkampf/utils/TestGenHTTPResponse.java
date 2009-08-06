@@ -17,11 +17,12 @@ import org.apache.http.message.BasicHttpResponse;
 
 public class TestGenHTTPResponse extends TestCase {
 	
+	String docRootPath = "/var/www";
 	GenHTTPResponse genHTTPResp;
 	String entityString = "test";
 	
 	public void setUp() {
-		genHTTPResp = new GenHTTPResponse();
+		genHTTPResp = new GenHTTPResponse(docRootPath);
 	}
 	
 	public void testGetRequestLineParams() throws IOException {

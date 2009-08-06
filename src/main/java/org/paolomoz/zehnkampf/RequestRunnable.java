@@ -32,12 +32,13 @@ class RequestRunnable implements Runnable {
 
 	Logger logger = Logger.getLogger("HttpServer");
 	private Socket s;
-	GenHTTPResponse respGen = new GenHTTPResponse();
 	File docRoot;
+	GenHTTPResponse respGen;
 
 	RequestRunnable(Socket s, File docRoot) {
 		this.s = s;
 		this.docRoot = docRoot;
+		respGen = new GenHTTPResponse(docRoot.getPath());
 	}
 
 	public void run() {
