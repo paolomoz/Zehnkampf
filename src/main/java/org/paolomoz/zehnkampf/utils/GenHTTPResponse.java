@@ -126,24 +126,6 @@ public class GenHTTPResponse {
 		return params;
 	}
 
-
-//	public void parseRequestLine(InputStream in) throws IOException {
-//		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-//		requestLine = reader.readLine();
-//		logger.info("Request: " + requestLine);
-//		if ((requestLine == null) || (requestLine.length() < 1)) {
-//			throw new IOException("Could not read request");
-//		}
-//		StringTokenizer st = new StringTokenizer(requestLine);
-//		try {
-//			method = st.nextToken();
-//			uri = st.nextToken();
-//		} catch (NoSuchElementException x) {
-//			throw new IOException("Could not parse the request line");
-//		}
-//	}
-	
-
 	public void writeResponse(HttpResponse response, OutputStream buffOut)
 			throws IOException {
 		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(buffOut));

@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 
 import junit.framework.TestCase;
 
@@ -57,5 +56,6 @@ public class TestGenHTTPResponse extends TestCase {
 		is = new ByteArrayInputStream(requestLine.getBytes());
 		return is;
 	}
+
 
 }
