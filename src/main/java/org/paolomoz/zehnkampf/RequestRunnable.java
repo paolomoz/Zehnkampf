@@ -25,8 +25,9 @@ import org.paolomoz.zehnkampf.utils.GenHTTPResponse;
 
 /**
  * An implementation of Runnable designed to run Sockets
+ * 
  * @author paolomoz
- *
+ * 
  */
 class RequestRunnable implements Runnable {
 
@@ -80,6 +81,5 @@ class RequestRunnable implements Runnable {
 			out = null;
 		}
 	}
-	
 
 }

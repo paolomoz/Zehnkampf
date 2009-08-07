@@ -31,39 +31,43 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHttpResponse;
 
 public class TestGenHTTPResponse extends TestCase {
-	
+
 	String docRootPath = "/var/www";
 	GenHTTPResponse genHTTPResp;
 	String entityString = "test";
-	
+
 	public void setUp() {
 		genHTTPResp = new GenHTTPResponse(docRootPath);
 	}
-	
+
 	public void testGetRequestLineParams() throws IOException {
 		String requestLine = "GET /images/one.gif HTTP/1.1";
 		InputStream is = getInputStream(requestLine);
-		
+
 		String[] requestLineParams = genHTTPResp.getRequestLineParams(is);
-		
+
 		assertEquals("GET", requestLineParams[genHTTPResp.METHOD_REQUEST_PARAM]);
-		assertEquals("/images/one.gif", requestLineParams[genHTTPResp.URI_REQUEST_PARAM]);
-		assertEquals("HTTP/1.1", requestLineParams[genHTTPResp.PROTOCOL_REQUEST_PARAM]);
+		assertEquals("/images/one.gif",
+				requestLineParams[genHTTPResp.URI_REQUEST_PARAM]);
+		assertEquals("HTTP/1.1",
+				requestLineParams[genHTTPResp.PROTOCOL_REQUEST_PARAM]);
 	}
-	
+
 	public void testWriteResponse() throws IOException {
 		HttpEntity entity = new StringEntity(entityString);
-		
-		HttpResponse response = new BasicHttpResponse(new ProtocolVersion("HTTP", 1, 1), HttpStatus.SC_OK, "OK");
-		response.setHeader("Content-length", new Integer(entityString.length()).toString());
+
+		HttpResponse response = new BasicHttpResponse(new ProtocolVersion(
+				"HTTP", 1, 1), HttpStatus.SC_OK, "OK");
+		response.setHeader("Content-length", new Integer(entityString.length())
+				.toString());
 		response.setEntity(entity);
-		
+
 		assertEquals(1, response.getAllHeaders().length);
 		assertEquals("HTTP/1.1 200 OK", response.getStatusLine().toString());
-		
+
 		OutputStream out = new ByteArrayOutputStream();
 		genHTTPResp.writeResponse(response, out);
-		
+
 		assertEquals("test", out.toString());
 	}
 
@@ -72,6 +76,5 @@ public class TestGenHTTPResponse extends TestCase {
 		is = new ByteArrayInputStream(requestLine.getBytes());
 		return is;
 	}
-
 
 }

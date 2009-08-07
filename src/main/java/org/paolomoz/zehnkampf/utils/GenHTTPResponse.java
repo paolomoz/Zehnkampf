@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
@@ -45,10 +44,11 @@ import org.apache.http.message.BasicHttpResponse;
 import org.apache.tika.mime.MimeTypes;
 
 /**
- * This class processes the Socket Input/OutputStream 
- * providing the correct response from the server
+ * This class processes the Socket Input/OutputStream providing the correct
+ * response from the server
+ * 
  * @author paolomoz
- *
+ * 
  */
 public class GenHTTPResponse {
 
@@ -60,16 +60,10 @@ public class GenHTTPResponse {
 	int URI_REQUEST_PARAM = 1;
 	int PROTOCOL_REQUEST_PARAM = 2;
 	BufferedReader reader = null;
-	
-    static final String HTML_START =
-        "<html>" +
-        "<title>HTTP POST Server in java</title>" +
-        "<body>";
 
-static final String HTML_END =
-        "</body>" +
-        "</html>";
-	
+	static final String HTML_START = "<html><title>Zehnkampf Server</title><body>";
+	static final String HTML_END = "</body></html>";
+
 	public GenHTTPResponse(String DocRootPath) {
 		this.docRootPath = DocRootPath;
 	}
@@ -77,71 +71,21 @@ static final String HTML_END =
 	public void generateResponse(InputStream in, OutputStream out, File docRoot)
 			throws IOException {
 		requestLineParams = getRequestLineParams(in);
+		
 		if (requestLineParams[METHOD_REQUEST_PARAM].equals("POST")) {
-			PostMethodUtil util = new PostMethodUtil(reader, docRootPath + requestLineParams[URI_REQUEST_PARAM]);
+			PostMethodUtil util = new PostMethodUtil(reader, docRootPath
+					+ requestLineParams[URI_REQUEST_PARAM]);
 			util.upload();
 		}
-		File requestedFile = new File(docRoot, requestLineParams[URI_REQUEST_PARAM]);
+		
+		File requestedFile = new File(docRoot,
+				requestLineParams[URI_REQUEST_PARAM]);
 		BufferedOutputStream buffOut = new BufferedOutputStream(out);
 		HttpResponse response = setResponse(requestedFile);
 		writeResponse(response, buffOut);
 		buffOut.flush();
 	}
 	
-//	public void processPost(InputStream in) throws IOException {
-//		do {
-//            String currentLine = reader.readLine();
-//            
-//            if (currentLine.indexOf("Content-Type: multipart/form-data") != -1) {
-//              String boundary = currentLine.split("boundary=")[1];
-//              // The POST boundary                                 
-//              while (true) {
-//                  currentLine = reader.readLine();
-//                  if (currentLine.indexOf("Content-Length:") != -1) {
-//                      String contentLength = currentLine.split(" ")[1];
-//                      logger.info("Content Length = " + contentLength);
-//                      break;
-//                  }              
-//              }
-//              
-//              String filename = null;
-//              while (true) {
-//                  currentLine = reader.readLine();
-//                  if (currentLine.indexOf("--" + boundary) != -1) {
-//                      filename = reader.readLine().split("filename=")[1].replaceAll("\"", "");
-//                      String [] filelist = filename.split("\\" + System.getProperty("file.separator"));
-//                      filename = filelist[filelist.length - 1];
-//                      break;
-//                  }              
-//              }    
-//              
-//              String fileContentType = reader.readLine().split(" ")[1];
-//              System.out.println("File content type = " + fileContentType);
-//
-//              reader.readLine();
-//              PrintWriter fout = new PrintWriter(docRootPath + requestLineParams[URI_REQUEST_PARAM] + "/" + filename);
-//              String prevLine = reader.readLine();
-//              currentLine = reader.readLine();        
-//              
-//              //Here we upload the actual file contents
-//              while (true) {
-//                  if (currentLine.equals("--" + boundary + "--")) {
-//                      fout.print(prevLine);
-//                      break;
-//                  }
-//                  else {
-//                      fout.println(prevLine);
-//                  }
-//                  prevLine = currentLine;              
-//                  currentLine = reader.readLine();
-//              } 
-//              fout.close();           
-//            }
-//			
-//		}while (reader.ready());
-//	}
-
-
 	private HttpResponse setResponse(File requestedFile)
 			throws FileNotFoundException, UnsupportedEncodingException {
 		HttpResponse response;
@@ -151,18 +95,17 @@ static final String HTML_END =
 			} else {
 				response = setNotFound();
 			}
-		}
-		else if (requestLineParams[METHOD_REQUEST_PARAM].equals("POST")) {
+		} else if (requestLineParams[METHOD_REQUEST_PARAM].equals("POST")) {
 			response = setCreated(requestedFile);
-		}
-		else {
+		} else {
 			logger.severe("Method not supported (yet)");
 			response = null;
 		}
 		return response;
 	}
-	
-	private HttpResponse setCreated(File requestedFile) throws UnsupportedEncodingException {
+
+	private HttpResponse setCreated(File requestedFile)
+			throws UnsupportedEncodingException {
 		return setDirectoryResponse(requestedFile);
 	}
 
@@ -172,24 +115,10 @@ static final String HTML_END =
 		HttpResponse response;
 		response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
 				HttpStatus.SC_CREATED, "Created");
-		StringBuffer sb = new StringBuffer();
-		sb.append(HTML_START +
-        "<form action=\"" + requestLineParams[URI_REQUEST_PARAM] + "\" enctype=\"multipart/form-data\"" +
-        "method=\"post\">" +
-        "Enter the name of the File <input name=\"file\" type=\"file\"><br>" +
-       "<input value=\"Upload\" type=\"submit\"></form>" +
-       "Upload only text files.");
-		sb.append("<ul>");
-		for (int i = 0 ; i < requestedFile.listFiles().length; i++) {
-			File item = requestedFile.listFiles()[i];
-			sb.append("<li><a href=\"" + item.getPath().substring(docRootPath.length()+1) + "\">" + item.getName() + "</a></li>");
-		}
-		sb.append("</ul>");
-           sb.append(HTML_END);
-           String content = sb.toString();
-			response.setHeader("Content-Type", "text/html");
-			response.setHeader("Content-length", new Integer(content.length())
-					.toString());
+		String content = getHtml(requestedFile);
+		response.setHeader("Content-Type", "text/html");
+		response.setHeader("Content-length", new Integer(content.length())
+				.toString());
 		entity = new StringEntity(content);
 		response.setEntity(entity);
 		logger.info(response.getStatusLine().getStatusCode() + " - "
@@ -197,29 +126,49 @@ static final String HTML_END =
 		return response;
 	}
 
+	private String getHtml(File requestedFile) {
+	String HTML_FORM = "<form action=\"" + requestLineParams[URI_REQUEST_PARAM] + "\" enctype=\"multipart/form-data\""
+		+ "method=\"post\">Enter the name of the File <input name=\"file\" type=\"file\"><br><input value=\"Upload\" type=\"submit\"></form>"
+		+ "Upload only text files.";
+		StringBuffer sb = new StringBuffer();
+		sb
+				.append(HTML_START + HTML_FORM);
+		sb.append("<ul>");
+		for (int i = 0; i < requestedFile.listFiles().length; i++) {
+			File item = requestedFile.listFiles()[i];
+			sb.append("<li><a href=\""
+					+ item.getPath().substring(docRootPath.length() + 1)
+					+ "\">" + item.getName() + "</a></li>");
+		}
+		sb.append("</ul>");
+		sb.append(HTML_END);
+		String content = sb.toString();
+		return content;
+	}
+
 	private HttpResponse setNotFound() throws UnsupportedEncodingException {
 		HttpResponse response;
 		response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
 				HttpStatus.SC_NOT_FOUND, "404 - Not Found");
-		String entityBody = "<html>" + 
-		"<head><title>404 - Not Found</title></head>" +
-		"<body>Not Found</body></html>";
+		String entityBody = "<html>"
+				+ "<head><title>404 - Not Found</title></head>"
+				+ "<body>Not Found</body></html>";
 		HttpEntity entity = new StringEntity(entityBody);
 		response.setEntity(entity);
-		logger.info(response.getStatusLine().getStatusCode() + " - " + response.getStatusLine().getReasonPhrase());
+		logger.info(response.getStatusLine().getStatusCode() + " - "
+				+ response.getStatusLine().getReasonPhrase());
 		return response;
 	}
 
-
-	private HttpResponse setOK(File requestedFile) throws FileNotFoundException, UnsupportedEncodingException {
+	private HttpResponse setOK(File requestedFile)
+			throws FileNotFoundException, UnsupportedEncodingException {
 		HttpResponse response = null;
 		HttpEntity entity = null;
 		if (requestedFile.isDirectory()) {
 			return setDirectoryResponse(requestedFile);
-		}
-		else {
-		response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
-				HttpStatus.SC_OK, "OK");
+		} else {
+			response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
+					HttpStatus.SC_OK, "OK");
 			int fileLen = (int) requestedFile.length();
 			BufferedInputStream fileIn = new BufferedInputStream(
 					new FileInputStream(requestedFile));
@@ -236,12 +185,12 @@ static final String HTML_END =
 			return response;
 		}
 	}
-	
+
 	public String[] getRequestLineParams(InputStream in) throws IOException {
 		String[] params = new String[3];
 		reader = new BufferedReader(new InputStreamReader(in));
 		requestLine = reader.readLine();
-		
+
 		logger.info("Request: " + requestLine);
 		if ((requestLine == null) || (requestLine.length() < 1)) {
 			throw new IOException("Could not read request");
@@ -259,20 +208,22 @@ static final String HTML_END =
 
 	public void writeResponse(HttpResponse response, OutputStream buffOut)
 			throws IOException {
-		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(buffOut));
-		
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+				buffOut));
+
 		// write response status line
 		writer.write(response.getStatusLine().toString() + "\r\n");
-		
+
 		// write response headers
-		for (HeaderIterator iterator = response.headerIterator() ; iterator.hasNext() ;) {
+		for (HeaderIterator iterator = response.headerIterator(); iterator
+				.hasNext();) {
 			Header item = iterator.nextHeader();
 			writer.write(item.getName() + ": " + item.getValue());
 		}
-		
+
 		// write response separator line
 		writer.write("\r\n");
-		
+
 		// write response entity
 		HttpEntity entity = response.getEntity();
 		if (entity != null) {
