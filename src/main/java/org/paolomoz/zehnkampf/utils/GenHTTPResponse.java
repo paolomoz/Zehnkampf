@@ -79,7 +79,6 @@ public class GenHTTPResponse {
 		}
 		
 		File requestedFile = new File(docRootPath + requestLineParams[URI_REQUEST_PARAM]);
-		System.out.println("reqFile: " + requestedFile.getPath());
 		BufferedOutputStream buffOut = new BufferedOutputStream(out);
 		HttpResponse response = setResponse(requestedFile);
 		writeResponse(response, buffOut);
@@ -136,11 +135,7 @@ public class GenHTTPResponse {
 		sb.append("<ul>");
 		for (int i = 0; i < requestedFile.listFiles().length; i++) {
 			File item = requestedFile.listFiles()[i];
-			System.out.println(item.getPath());
-			System.out.println(docRootPath.length() + 1);
-			System.out.println(docRootPath);
 			String itemPath = item.getPath().substring(docRootPath.length());
-			System.out.println(itemPath);
 			sb.append("<li><a href=\""
 					+ itemPath
 					+ "\">" + item.getName() + "</a></li>");
