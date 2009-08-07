@@ -35,9 +35,9 @@ then
 
 if test $docRootPath
 then
-java -jar ./target/zehnkampf-server-1.0-SNAPSHOT-jar-with-dependencies.jar $port $tpSize $docRootPath
+java -jar ./target/zehnkampf-server-1.0-jar-with-dependencies.jar $port $tpSize $docRootPath
 else
-java -jar ./target/zehnkampf-server-1.0-SNAPSHOT-jar-with-dependencies.jar $port $tpSize $PWD/src/test/resources/htmldir
+java -jar ./target/zehnkampf-server-1.0-jar-with-dependencies.jar $port $tpSize $PWD/src/test/resources/htmldir
 fi
 
 else
