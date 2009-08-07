@@ -15,12 +15,12 @@
  */
 package org.paolomoz.zehnkampf;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.logging.Logger;
+
 import org.paolomoz.zehnkampf.utils.GenHTTPResponse;
 
 /**
@@ -33,13 +33,13 @@ class RequestRunnable implements Runnable {
 
 	Logger logger = Logger.getLogger("HttpServer");
 	private Socket s;
-	File docRoot;
+	String docRootPath;
 	GenHTTPResponse respGen;
 
-	RequestRunnable(Socket s, File docRoot) {
+	RequestRunnable(Socket s, String docRootPath) {
 		this.s = s;
-		this.docRoot = docRoot;
-		respGen = new GenHTTPResponse(docRoot.getPath());
+		this.docRootPath = docRootPath;
+		respGen = new GenHTTPResponse(docRootPath);
 	}
 
 	/*
@@ -54,7 +54,7 @@ class RequestRunnable implements Runnable {
 			try {
 				in = s.getInputStream();
 				out = s.getOutputStream();
-				respGen.generateResponse(in, out, docRoot);
+				respGen.generateResponse(in, out);
 				out.flush();
 			} catch (IOException iox) {
 				logger.severe("I/O error while processing request\n");

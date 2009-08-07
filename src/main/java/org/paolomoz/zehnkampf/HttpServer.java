@@ -57,7 +57,7 @@ public class HttpServer {
 		while (true) {
 			Socket s = sock.accept();
 			logger.info("A connection has been accepted by the Server Socket");
-			tpe.execute(new RequestRunnable(s, new File(docRootPath)));
+			tpe.execute(new RequestRunnable(s, docRootPath));
 		}
 	}
 
