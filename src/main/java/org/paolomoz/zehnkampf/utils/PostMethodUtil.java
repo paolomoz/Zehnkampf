@@ -37,6 +37,10 @@ public class PostMethodUtil {
 		this.targetPath = targetPath;
 	}
 
+	/*
+	 * Most of the code in the upload() method is taken from 
+	 * http://www.prasannatech.net/2008/11/http-web-server-java-post-file-upload.html
+	 */
 	public void upload() throws IOException {
 		do {
 			String currentLine = reader.readLine();

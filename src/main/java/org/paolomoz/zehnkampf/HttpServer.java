@@ -34,6 +34,14 @@ public class HttpServer {
 	
 	static Logger logger = Logger.getLogger("HttpServer");
 	
+	/*
+	 * The general architecture is taken from two books:
+	 * [1] - http://www.cafeaulait.org/books/jnp3/ - by Elliotte Rusty Harold
+	 * [2] - http://java.sun.com/developer/Books/javaprogramming/threads/ - by Paul Hyde
+	 * 
+	 *  Some methods are extended starting from public code on the internet;
+	 *  those part of code are marked with comments
+	 */
 	public static void main(String[] args) throws Exception {
 		ServerArguments argsHelper = new ServerArguments(args);
 		int port = argsHelper.getPort();

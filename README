@@ -2,9 +2,32 @@ Welcome to Zehnkampf
 ====================
 
 
+Executing the binaries
+----------------------
+
+
+java -jar zehnkampf-server-1.0-jar-with-dependencies.jar <port> <thread pool number> <document root>
+
+
+
+
+Building and executing from source
+----------------------------------
+
+
+./build.sh
+
+
+The above script executes a maven clean and a new build of the jar with dependencies.
+
+The same script, in case you wish, guides you through the startup of the server.
+
+Follow the dialog instruction to startup the server.
+
+
+
 
 License information
-
 -------------------
 
 

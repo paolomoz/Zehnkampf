@@ -42,6 +42,10 @@ class RequestRunnable implements Runnable {
 		respGen = new GenHTTPResponse(docRoot.getPath());
 	}
 
+	/*
+	 * Part of the run() method implementation is taken from:
+	 * [1] - http://openit.disco.unimib.it/ferretti/reti/Lab1.htm
+	 */
 	public void run() {
 		InputStream in = null;
 		OutputStream out = null;
