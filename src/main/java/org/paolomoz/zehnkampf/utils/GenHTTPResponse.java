@@ -78,7 +78,8 @@ static final String HTML_END =
 			throws IOException {
 		requestLineParams = getRequestLineParams(in);
 		if (requestLineParams[METHOD_REQUEST_PARAM].equals("POST")) {
-			processPost(in);
+			PostMethodUtil util = new PostMethodUtil(reader, docRootPath + requestLineParams[URI_REQUEST_PARAM]);
+			util.upload();
 		}
 		File requestedFile = new File(docRoot, requestLineParams[URI_REQUEST_PARAM]);
 		BufferedOutputStream buffOut = new BufferedOutputStream(out);
@@ -87,63 +88,58 @@ static final String HTML_END =
 		buffOut.flush();
 	}
 	
-	public void processPost(InputStream in) throws IOException {   
-		do {
-            String currentLine = reader.readLine();
-            
-            if (currentLine.indexOf("Content-Type: multipart/form-data") != -1) {
-              String boundary = currentLine.split("boundary=")[1];
-              // The POST boundary                                 
-              while (true) {
-                  currentLine = reader.readLine();
-                  if (currentLine.indexOf("Content-Length:") != -1) {
-                      String contentLength = currentLine.split(" ")[1];
-                      logger.info("Content Length = " + contentLength);
-                      break;
-                  }              
-              }   
-              
-              //Content length should be < 2MB
-//              if (Long.valueOf(contentLength) > 2000000L) {
-//                  sendResponse(200, "File size should be < 2MB", false);
+//	public void processPost(InputStream in) throws IOException {
+//		do {
+//            String currentLine = reader.readLine();
+//            
+//            if (currentLine.indexOf("Content-Type: multipart/form-data") != -1) {
+//              String boundary = currentLine.split("boundary=")[1];
+//              // The POST boundary                                 
+//              while (true) {
+//                  currentLine = reader.readLine();
+//                  if (currentLine.indexOf("Content-Length:") != -1) {
+//                      String contentLength = currentLine.split(" ")[1];
+//                      logger.info("Content Length = " + contentLength);
+//                      break;
+//                  }              
 //              }
-              
-              String filename = null;
-              while (true) {
-                  currentLine = reader.readLine();
-                  if (currentLine.indexOf("--" + boundary) != -1) {
-                      filename = reader.readLine().split("filename=")[1].replaceAll("\"", "");
-                      String [] filelist = filename.split("\\" + System.getProperty("file.separator"));
-                      filename = filelist[filelist.length - 1];
-                      break;
-                  }              
-              }    
-              
-              String fileContentType = reader.readLine().split(" ")[1];
-              System.out.println("File content type = " + fileContentType);
-
-              reader.readLine();
-              PrintWriter fout = new PrintWriter(docRootPath + requestLineParams[URI_REQUEST_PARAM] + "/" + filename);
-              String prevLine = reader.readLine();
-              currentLine = reader.readLine();        
-              
-              //Here we upload the actual file contents
-              while (true) {
-                  if (currentLine.equals("--" + boundary + "--")) {
-                      fout.print(prevLine);
-                      break;
-                  }
-                  else {
-                      fout.println(prevLine);
-                  }
-                  prevLine = currentLine;              
-                  currentLine = reader.readLine();
-              } 
-              fout.close();           
-            }
-			
-		}while (reader.ready());
-	}
+//              
+//              String filename = null;
+//              while (true) {
+//                  currentLine = reader.readLine();
+//                  if (currentLine.indexOf("--" + boundary) != -1) {
+//                      filename = reader.readLine().split("filename=")[1].replaceAll("\"", "");
+//                      String [] filelist = filename.split("\\" + System.getProperty("file.separator"));
+//                      filename = filelist[filelist.length - 1];
+//                      break;
+//                  }              
+//              }    
+//              
+//              String fileContentType = reader.readLine().split(" ")[1];
+//              System.out.println("File content type = " + fileContentType);
+//
+//              reader.readLine();
+//              PrintWriter fout = new PrintWriter(docRootPath + requestLineParams[URI_REQUEST_PARAM] + "/" + filename);
+//              String prevLine = reader.readLine();
+//              currentLine = reader.readLine();        
+//              
+//              //Here we upload the actual file contents
+//              while (true) {
+//                  if (currentLine.equals("--" + boundary + "--")) {
+//                      fout.print(prevLine);
+//                      break;
+//                  }
+//                  else {
+//                      fout.println(prevLine);
+//                  }
+//                  prevLine = currentLine;              
+//                  currentLine = reader.readLine();
+//              } 
+//              fout.close();           
+//            }
+//			
+//		}while (reader.ready());
+//	}
 
 
 	private HttpResponse setResponse(File requestedFile)
