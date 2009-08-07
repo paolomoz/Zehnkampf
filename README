@@ -1,6 +1,9 @@
 Welcome to Zehnkampf
 ====================
 
+Zehnkampf Server is a multi-threaded web server with thread pooling.
+
+
 
 Executing the binaries
 ----------------------
