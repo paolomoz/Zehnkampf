@@ -8,24 +8,27 @@ Zehnkampf Server is a multi-threaded web server with thread pooling.
 Executing the binaries
 ----------------------
 
+## All platforms ##
 
 java -jar zehnkampf-server-1.0-jar-with-dependencies.jar <port> <thread pool number> <document root>
-
 
 
 
 Building and executing from source
 ----------------------------------
 
-
+## On Unix like systems ##
 ./build.sh
 
-
 The above script executes a maven clean and a new build of the jar with dependencies.
-
 The same script, in case you wish, guides you through the startup of the server.
-
 Follow the dialog instruction to startup the server.
+
+
+## On other systems (Windows) ##
+mvn clean assembly:assembly
+cd target
+java -jar zehnkampf-server-1.0-jar-with-dependencies.jar <port> <thread pool number> <document root>
 
 
 
