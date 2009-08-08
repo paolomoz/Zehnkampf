@@ -19,6 +19,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -120,8 +121,6 @@ public class GenHTTPResponse {
 				.toString());
 		entity = new StringEntity(content);
 		response.setEntity(entity);
-		logger.info(response.getStatusLine().getStatusCode() + " - "
-				+ response.getStatusLine().getReasonPhrase());
 		return response;
 	}
 
@@ -149,14 +148,12 @@ public class GenHTTPResponse {
 	private HttpResponse setNotFound() throws UnsupportedEncodingException {
 		HttpResponse response;
 		response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
-				HttpStatus.SC_NOT_FOUND, "404 - Not Found");
+				HttpStatus.SC_NOT_FOUND, "Not Found");
 		String entityBody = "<html>"
 				+ "<head><title>404 - Not Found</title></head>"
 				+ "<body>Not Found</body></html>";
 		HttpEntity entity = new StringEntity(entityBody);
 		response.setEntity(entity);
-		logger.info(response.getStatusLine().getStatusCode() + " - "
-				+ response.getStatusLine().getReasonPhrase());
 		return response;
 	}
 
@@ -180,8 +177,6 @@ public class GenHTTPResponse {
 					.toString());
 			entity = new InputStreamEntity(fileIn, fileLen);
 			response.setEntity(entity);
-			logger.info(response.getStatusLine().getStatusCode() + " - "
-					+ response.getStatusLine().getReasonPhrase());
 			return response;
 		}
 	}
@@ -208,27 +203,50 @@ public class GenHTTPResponse {
 
 	public void writeResponse(HttpResponse response, OutputStream buffOut)
 			throws IOException {
-		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-				buffOut));
-
-		// write response status line
-		writer.write(response.getStatusLine().toString() + "\r\n");
-
-		// write response headers
-		for (HeaderIterator iterator = response.headerIterator(); iterator
-				.hasNext();) {
+		
+		String statusLine = response.getStatusLine().toString();
+		String[] headers = new String[response.getAllHeaders().length];
+		int i = 0;
+		for (HeaderIterator iterator = response.headerIterator(); iterator.hasNext();) {
 			Header item = iterator.nextHeader();
-			writer.write(item.getName() + ": " + item.getValue());
+			headers[i++] = item.getName() + ": " + item.getValue();
 		}
-
-		// write response separator line
-		writer.write("\r\n");
-
-		// write response entity
 		HttpEntity entity = response.getEntity();
-		if (entity != null) {
-			entity.writeTo(buffOut);
-		}
+		
+		byte[] headerBytes = createResponseBytes(statusLine, headers, entity);
+
+		buffOut.write(headerBytes);
 	}
+	
+	private byte[] createResponseBytes(String statusLine, String[] headers,
+			HttpEntity entity) throws IOException {
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(baos));
+
+		// Write the first line of the response, followed by
+		// the RFC-specified line termination sequence.
+		writer.write(statusLine + "\r\n");
+
+		// Iterate all the speficied headers and write each of them
+		for (int i = 0; i < headers.length; i++) {
+			writer.write(headers[i] + "\r\n");
+		}
+
+		// A blank line is required after the header.
+		writer.write("\r\n");
+		writer.flush();
+
+		// Write the response entity
+		if (entity != null) {
+			entity.writeTo(baos);
+		}
+
+		byte[] data = baos.toByteArray();
+		writer.close();
+
+		return data;
+	}
+
 
 }
