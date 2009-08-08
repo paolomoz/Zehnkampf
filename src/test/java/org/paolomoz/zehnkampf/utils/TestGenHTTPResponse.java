@@ -68,7 +68,11 @@ public class TestGenHTTPResponse extends TestCase {
 		OutputStream out = new ByteArrayOutputStream();
 		genHTTPResp.writeResponse(response, out);
 
-		assertEquals("test", out.toString());
+		assertEquals("HTTP/1.1 200 OK\r\n" +
+				"Content-length: 4\r\n" +
+				"\r\n" +
+				"test", 
+				out.toString());
 	}
 
 	private InputStream getInputStream(String requestLine) {
