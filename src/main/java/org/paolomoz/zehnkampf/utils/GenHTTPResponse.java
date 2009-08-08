@@ -87,7 +87,7 @@ public class GenHTTPResponse {
 		buffOut.flush();
 	}
 	
-	private HttpResponse setResponse(File requestedFile)
+	public HttpResponse setResponse(File requestedFile)
 			throws FileNotFoundException, UnsupportedEncodingException {
 		HttpResponse response;
 		if (requestLineParams[METHOD_REQUEST_PARAM].equals("GET")) {
@@ -105,48 +105,22 @@ public class GenHTTPResponse {
 		return response;
 	}
 
-	private HttpResponse setCreated(File requestedFile)
+	public HttpResponse setCreated(File requestedFile)
 			throws UnsupportedEncodingException {
-		return setDirectoryResponse(requestedFile);
-	}
-
-	private HttpResponse setDirectoryResponse(File requestedFile)
-			throws UnsupportedEncodingException {
-		HttpEntity entity;
-		HttpResponse response;
-		response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
+		HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
 				HttpStatus.SC_CREATED, "Created");
-		String content = getHtml(requestedFile);
-		response.setHeader("Content-Type", "text/html");
-		response.setHeader("Content-length", new Integer(content.length())
-				.toString());
-		entity = new StringEntity(content);
+		HttpEntity entity = getDirectoryEntity(requestedFile);
 		response.setEntity(entity);
 		return response;
 	}
-
-	private String getHtml(File requestedFile) {
-	String HTML_FORM = "<form action=\"" + requestLineParams[URI_REQUEST_PARAM] + "\" enctype=\"multipart/form-data\""
-		+ "method=\"post\">Enter the name of the File <input name=\"file\" type=\"file\"><br><input value=\"Upload\" type=\"submit\"></form>"
-		+ "Upload only text files.";
-		StringBuffer sb = new StringBuffer();
-		sb
-				.append(HTML_START + HTML_FORM);
-		sb.append("<ul>");
-		for (int i = 0; i < requestedFile.listFiles().length; i++) {
-			File item = requestedFile.listFiles()[i];
-			String itemPath = item.getPath().substring(docRootPath.length());
-			sb.append("<li><a href=\""
-					+ itemPath
-					+ "\">" + item.getName() + "</a></li>");
-		}
-		sb.append("</ul>");
-		sb.append(HTML_END);
-		String content = sb.toString();
-		return content;
+	
+	public HttpEntity getDirectoryEntity(File requestedFile) throws UnsupportedEncodingException {
+		String content = getDirectoryPageHtml(requestedFile);
+		HttpEntity entity = new StringEntity(content);
+		return entity;
 	}
 
-	private HttpResponse setNotFound() throws UnsupportedEncodingException {
+	public HttpResponse setNotFound() throws UnsupportedEncodingException {
 		HttpResponse response;
 		response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
 				HttpStatus.SC_NOT_FOUND, "Not Found");
@@ -158,29 +132,45 @@ public class GenHTTPResponse {
 		return response;
 	}
 
-	private HttpResponse setOK(File requestedFile)
+	public HttpResponse setOK(File requestedFile)
 			throws FileNotFoundException, UnsupportedEncodingException {
-		HttpResponse response = null;
+		HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
+				HttpStatus.SC_OK, "OK");
 		HttpEntity entity = null;
 		if (requestedFile.isDirectory()) {
-			return setDirectoryResponse(requestedFile);
+			entity = getDirectoryEntity(requestedFile);
 		} else {
-			response = new BasicHttpResponse(HttpVersion.HTTP_1_1,
-					HttpStatus.SC_OK, "OK");
 			int fileLen = (int) requestedFile.length();
 			BufferedInputStream fileIn = new BufferedInputStream(
 					new FileInputStream(requestedFile));
 			
+			// Detect the content mimetype
 			String mimeTypeName = new MimetypesFileTypeMap().getContentType(requestedFile);
-			System.out.println(mimeTypeName);
 
 			response.setHeader("Content-Type", mimeTypeName);
 			response.setHeader("Content-length", new Integer(fileLen)
 					.toString());
 			entity = new InputStreamEntity(fileIn, fileLen);
-			response.setEntity(entity);
-			return response;
 		}
+		response.setEntity(entity);
+		return response;
+	}
+
+	public void writeResponse(HttpResponse response, OutputStream buffOut)
+			throws IOException {
+		
+		String statusLine = response.getStatusLine().toString();
+		String[] headers = new String[response.getAllHeaders().length];
+		int i = 0;
+		for (HeaderIterator iterator = response.headerIterator(); iterator.hasNext();) {
+			Header item = iterator.nextHeader();
+			headers[i++] = item.getName() + ": " + item.getValue();
+		}
+		HttpEntity entity = response.getEntity();
+		
+		byte[] headerBytes = createResponseBytes(statusLine, headers, entity);
+
+		buffOut.write(headerBytes);
 	}
 
 	public String[] getRequestLineParams(InputStream in) throws IOException {
@@ -201,23 +191,6 @@ public class GenHTTPResponse {
 			throw new IOException("Could not parse the request line");
 		}
 		return params;
-	}
-
-	public void writeResponse(HttpResponse response, OutputStream buffOut)
-			throws IOException {
-		
-		String statusLine = response.getStatusLine().toString();
-		String[] headers = new String[response.getAllHeaders().length];
-		int i = 0;
-		for (HeaderIterator iterator = response.headerIterator(); iterator.hasNext();) {
-			Header item = iterator.nextHeader();
-			headers[i++] = item.getName() + ": " + item.getValue();
-		}
-		HttpEntity entity = response.getEntity();
-		
-		byte[] headerBytes = createResponseBytes(statusLine, headers, entity);
-
-		buffOut.write(headerBytes);
 	}
 	
 	private byte[] createResponseBytes(String statusLine, String[] headers,
@@ -248,6 +221,27 @@ public class GenHTTPResponse {
 		writer.close();
 
 		return data;
+	}
+
+	private String getDirectoryPageHtml(File requestedFile) {
+	String HTML_FORM = "<form action=\"" + requestLineParams[URI_REQUEST_PARAM] + "\" enctype=\"multipart/form-data\""
+		+ "method=\"post\">Enter the name of the File <input name=\"file\" type=\"file\"><br><input value=\"Upload\" type=\"submit\"></form>"
+		+ "Upload only text files.";
+		StringBuffer sb = new StringBuffer();
+		sb
+				.append(HTML_START + HTML_FORM);
+		sb.append("<ul>");
+		for (int i = 0; i < requestedFile.listFiles().length; i++) {
+			File item = requestedFile.listFiles()[i];
+			String itemPath = item.getPath().substring(docRootPath.length());
+			sb.append("<li><a href=\""
+					+ itemPath
+					+ "\">" + item.getName() + "</a></li>");
+		}
+		sb.append("</ul>");
+		sb.append(HTML_END);
+		String content = sb.toString();
+		return content;
 	}
 
 
