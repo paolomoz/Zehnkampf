@@ -33,6 +33,8 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
+import javax.activation.MimetypesFileTypeMap;
+
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
@@ -42,7 +44,6 @@ import org.apache.http.HttpVersion;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHttpResponse;
-import org.apache.tika.mime.MimeTypes;
 
 /**
  * This class processes the Socket Input/OutputStream providing the correct
@@ -169,10 +170,11 @@ public class GenHTTPResponse {
 			int fileLen = (int) requestedFile.length();
 			BufferedInputStream fileIn = new BufferedInputStream(
 					new FileInputStream(requestedFile));
-			MimeTypes mimeTypes = new MimeTypes();
-			String mimeType = mimeTypes.getMimeType(requestedFile).getName();
+			
+			String mimeTypeName = new MimetypesFileTypeMap().getContentType(requestedFile);
+			System.out.println(mimeTypeName);
 
-			response.setHeader("Content-Type", mimeType);
+			response.setHeader("Content-Type", mimeTypeName);
 			response.setHeader("Content-length", new Integer(fileLen)
 					.toString());
 			entity = new InputStreamEntity(fileIn, fileLen);

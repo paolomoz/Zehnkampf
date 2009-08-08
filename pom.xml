@@ -46,9 +46,10 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-		<groupId>org.apache.tika</groupId>
-		<artifactId>tika</artifactId>
-		<version>0.2</version>
+		  <groupId>javax.activation</groupId>
+		  <artifactId>activation</artifactId>
+		  <version>1.1.1</version>
+		  <scope>compile</scope>
 		</dependency>
 		<dependency>
 		  <groupId>org.apache.httpcomponents</groupId>
